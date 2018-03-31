@@ -63,6 +63,7 @@ const SUMMARY_LEN: usize = 15;
 static INTERNET_USAGE_VALUE: AtomicIsize = AtomicIsize::new(-1);
 
 fn main() {
+    // FIXME: fail when running before connected to the network.
     thread::spawn(|| {
         let internet_usage = (|| {
             let tcp_stream = TcpStream::connect("www.videotron.com:443").ok()?;
@@ -211,7 +212,7 @@ fn datetime_entry() -> Option<Entry> {
     const DAYS: &[&str] = &["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 
     let now = time::now();
-    let format = format!("{} {} {} {} ⌚ {}:{}", DAYS[now.tm_wday as usize], now.tm_mday, MONTHS[now.tm_mon as usize],
+    let format = format!("{} {} {} {} ⌚ {}:{:02}", DAYS[now.tm_wday as usize], now.tm_mday, MONTHS[now.tm_mon as usize],
         now.tm_year + 1900, now.tm_hour, now.tm_min);
     Some(Entry::new("datetime", format))
 }
