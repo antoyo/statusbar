@@ -63,7 +63,6 @@ const SUMMARY_LEN: usize = 15;
 static INTERNET_USAGE_VALUE: AtomicIsize = AtomicIsize::new(-1);
 
 fn main() {
-    // FIXME: fail when running before connected to the network.
     thread::spawn(|| {
         let internet_usage = (|| {
             let tcp_stream = TcpStream::connect("www.videotron.com:443").ok()?;
@@ -128,7 +127,6 @@ impl Entries {
 
 fn battery_entry() -> Option<Entry> {
     let energy = read_u64("/sys/class/power_supply/BAT0/energy_now")?;
-    let energy_full = read_u64("/sys/class/power_supply/BAT0/energy_full")?;
     let power = read_u64("/sys/class/power_supply/BAT0/power_now")?;
 
     if power == 0 {
@@ -141,19 +139,12 @@ fn battery_entry() -> Option<Entry> {
     status.pop(); // Remove newline.
 
     match status.as_str() {
-        "Charging" => {
-            let time = (energy_full - energy) as f64 / power as f64;
-            let minutes = (time * 60.0) as u64;
-            let hours = minutes / 60;
-            let minutes = minutes % 60;
-            Some(Entry::new("battery", format!("C: {}:{:02}", hours, minutes)))
-        },
         "Discharging" => {
             let time = energy as f64 / power as f64;
             let minutes = (time * 60.0) as u64;
             let hours = minutes / 60;
             let minutes = minutes % 60;
-            Some(Entry::new("battery", format!("D: {}:{:02}", hours, minutes)))
+            Some(Entry::new("battery", format!("{}:{:02}", hours, minutes)))
         },
         // TODO: other state.
         _ => None,
@@ -270,15 +261,16 @@ fn mail_entries() -> Vec<Entry> {
                 let mailbox = filename.to_str()?;
                 if !EXCLUDE_MAILBOXES.contains(&mailbox) {
                     let mailbox_dir = offlineimap_dir.join(mailbox);
+                    let mut unread_mail_count = 0;
                     for file in read_dir(&mailbox_dir).ok()? {
                         let file = file.ok()?;
                         let new_dir = mailbox_dir.join(file.file_name()).join("new");
-                        let unread_mail_count = read_dir(new_dir).ok()?.count();
-                        if unread_mail_count > 0 {
-                            let name = format!("{}_email", mailbox);
-                            entries.push(Entry::new_colored(&name, format!("✉ {} ({})", mailbox, unread_mail_count),
-                                TURQUOISE));
-                        }
+                        unread_mail_count += read_dir(new_dir).ok()?.count();
+                    }
+                    if unread_mail_count > 0 {
+                        let name = format!("{}_email", mailbox);
+                        entries.push(Entry::new_colored(&name, format!("✉ {} ({})", mailbox, unread_mail_count),
+                        TURQUOISE));
                     }
                 }
             }
