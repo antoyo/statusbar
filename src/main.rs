@@ -20,30 +20,31 @@
  */
 
 extern crate alsa;
-extern crate json;
+//extern crate json;
 extern crate nix;
-extern crate password_store;
+//extern crate password_store;
 extern crate rem;
 extern crate time;
-extern crate tls_api;
-extern crate tls_api_openssl;
+//extern crate tls_api;
+//extern crate tls_api_openssl;
 
 use std::env::home_dir;
 use std::fs::{File, read_dir};
-use std::io::{Read, Write};
-use std::net::TcpStream;
+//use std::io::{Read, Write};
+use std::io::Read;
+//use std::net::TcpStream;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::thread;
 use std::time::Duration;
 
 use alsa::mixer::{Mixer, SelemChannelId, SelemId};
-use json::parse;
+//use json::parse;
 use nix::ifaddrs::getifaddrs;
 use nix::sys::socket::{InetAddr, SockAddr};
-use password_store::PasswordStore;
+//use password_store::PasswordStore;
 use time::Tm;
-use tls_api::{TlsConnector, TlsConnectorBuilder};
-use tls_api_openssl::TlsConnector as Connector;
+//use tls_api::{TlsConnector, TlsConnectorBuilder};
+//use tls_api_openssl::TlsConnector as Connector;
 
 const GREEN: &str = "#00FF00";
 const PURPLE: &str = "#FF00FF";
@@ -63,7 +64,7 @@ const SUMMARY_LEN: usize = 15;
 static INTERNET_USAGE_VALUE: AtomicIsize = AtomicIsize::new(-1);
 
 fn main() {
-    thread::spawn(|| {
+    /*thread::spawn(|| {
         let internet_usage = (|| {
             let tcp_stream = TcpStream::connect("www.videotron.com:443").ok()?;
             let mut stream = Connector::builder().ok()?.build().ok()?
@@ -83,7 +84,7 @@ fn main() {
         if let Some(internet_usage) = internet_usage {
             INTERNET_USAGE_VALUE.store(internet_usage.round() as isize, Ordering::SeqCst);
         }
-    });
+    });*/
 
     println!(r#"{{"version": 1}}"#);
     println!("[");
@@ -203,7 +204,7 @@ fn datetime_entry() -> Option<Entry> {
     const DAYS: &[&str] = &["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 
     let now = time::now();
-    let format = format!("{} {} {} {} ⌚ {}:{:02}", DAYS[now.tm_wday as usize], now.tm_mday, MONTHS[now.tm_mon as usize],
+    let format = format!("{} {} {} {} | {}:{:02}", DAYS[now.tm_wday as usize], now.tm_mday, MONTHS[now.tm_mon as usize],
         now.tm_year + 1900, now.tm_hour, now.tm_min);
     Some(Entry::new("datetime", format))
 }
@@ -330,10 +331,11 @@ impl Entry {
             else {
                 String::new()
             };
+        let full_text = self.full_text.replace("\"", "\\\"");
         format!(r#"{{{}
     "name": {:?},
-    "full_text": {:?}
-}}"#, color, self.name, self.full_text)
+    "full_text": "{}"
+}}"#, color, self.name, full_text)
     }
 }
 
