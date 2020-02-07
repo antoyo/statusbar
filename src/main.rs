@@ -173,7 +173,7 @@ fn calendar_entries() -> Vec<Entry> {
                 tm_wday: 0,
                 tm_yday: 0,
                 tm_isdst: 0,
-                tm_utcoff: 0,
+                tm_utcoff: -5,
                 tm_nsec: 0,
             };
             let time_delta = entry_date - now;
